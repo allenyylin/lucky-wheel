@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸運轉盤</title>
+<style>
+  :root{
+    --ink:#1c1b29;
+    --paper:#fbf7ee;
+    --gold:#e8b23d;
+    --coral:#e8603c;
+    --teal:#2f8f80;
+    --violet:#5b4b8a;
+    --line:#1c1b29;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(232,178,61,0.18), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(91,75,138,0.22), transparent 45%),
+      var(--ink);
+    color:var(--paper);
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  .stage{
+    width:100%;
+    max-width:1040px;
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap:40px;
+    align-items:center;
+  }
+  @media (max-width: 820px){
+    .stage{grid-template-columns:1fr; gap:28px;}
+  }
+
+  /* ---- ticket-style heading ---- */
+  .marquee{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  .marquee .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 8px var(--gold);
+  }
+  .eyebrow{
+    font-size:13px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+  }
+  h1{
+    font-family: Georgia, "Noto Serif TC", serif;
+    font-size:clamp(30px, 4.4vw, 48px);
+    line-height:1.05;
+    margin:6px 0 12px;
+    letter-spacing:0.01em;
+  }
+  .sub{
+    color:#cfc9e0;
+    font-size:15px;
+    line-height:1.7;
+    max-width:46ch;
+    margin-bottom:26px;
+  }
+
+  /* ---- wheel column ---- */
+  .wheel-wrap{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .wheel-frame{
+    position:relative;
+    width:min(420px, 86vw);
+    aspect-ratio:1/1;
+  }
+  .bulbs{
+    position:absolute; inset:-14px;
+    border-radius:50%;
+    pointer-events:none;
+  }
+  .bulb{
+    position:absolute;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--gold);
+    box-shadow:0 0 6px 1px rgba(232,178,61,0.8);
+    animation:twinkle 1.6s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:.35; transform:scale(0.85);}
+    50%{opacity:1; transform:scale(1.05);}
+  }
+  canvas#wheel{
+    display:block;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    box-shadow:
+      0 0 0 6px var(--ink),
+      0 0 0 9px var(--gold),
+      0 20px 45px rgba(0,0,0,0.45);
+    cursor:pointer;
+    transition: filter .2s ease;
+  }
+  canvas#wheel:active{ filter:brightness(0.97); }
+
+  .pointer{
+    position:absolute;
+    top:-2px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:14px solid transparent;
+    border-right:14px solid transparent;
+    border-top:26px solid var(--coral);
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+    z-index:5;
+  }
+
+  .hub{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:22%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #fff5da, var(--gold) 70%);
+    border:4px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    z-index:4;
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+  }
+
+  .result{
+    margin-top:22px;
+    min-height:34px;
+    text-align:center;
+    font-family: Georgia, "Noto Serif TC", serif;
+    font-size:22px;
+    color:var(--gold);
+    opacity:0;
+    transform:translateY(6px);
+    transition: all .35s ease;
+  }
+  .result.show{opacity:1; transform:translateY(0);}
+
+  /* ---- controls panel ---- */
+  .panel{
+    background: rgba(251,247,238,0.05);
+    border:1px solid rgba(251,247,238,0.14);
+    border-radius:16px;
+    padding:22px;
+    backdrop-filter: blur(6px);
+  }
+  .panel label{
+    display:block;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:#a79fc4;
+    margin-bottom:8px;
+  }
+  textarea{
+    width:100%;
+    min-height:180px;
+    resize:vertical;
+    background: rgba(0,0,0,0.25);
+    border:1px solid rgba(251,247,238,0.18);
+    border-radius:10px;
+    color:var(--paper);
+    font-size:15px;
+    line-height:1.8;
+    padding:12px 14px;
+    font-family:inherit;
+  }
+  textarea:focus{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+  .hint{
+    font-size:12.5px;
+    color:#8f88a8;
+    margin:8px 0 18px;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    border-radius:999px;
+    padding:11px 20px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  button:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  button:active{ transform:scale(0.97); }
+  .btn-primary{
+    background:var(--coral);
+    color:#fff8ef;
+    flex:1 1 auto;
+  }
+  .btn-primary:hover{ box-shadow:0 6px 16px rgba(232,96,60,0.4); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; box-shadow:none; }
+  .btn-ghost{
+    background:transparent;
+    border-color:rgba(251,247,238,0.3);
+    color:var(--paper);
+  }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold); }
+
+  .history{
+    margin-top:18px;
+    font-size:13px;
+    color:#b7b0cf;
+  }
+  .history strong{ color:var(--paper); }
+  .history ul{
+    margin:8px 0 0;
+    padding-left:18px;
+    max-height:96px;
+    overflow-y:auto;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bulb{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div>
+    <div class="marquee"><span class="dot"></span><span class="eyebrow">Lucky Draw</span></div>
+    <h1>幸運轉盤</h1>
+    <p class="sub">在右邊輸入你的名單，每行一個項目，接著點一下轉盤，讓命運幫你決定。</p>
+
+    <div class="wheel-wrap">
+      <div class="wheel-frame">
+        <div class="bulbs" id="bulbs"></div>
+        <div class="pointer"></div>
+        <canvas id="wheel" width="640" height="640" aria-label="轉盤，點擊開始旋轉" role="button" tabindex="0"></canvas>
+        <div class="hub">🎯</div>
+      </div>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+
+  <div class="panel">
+    <label for="items">選項名單（每行一個）</label>
+    <textarea id="items">咖啡
+奶茶
+抹茶拿鐵
+可可
+氣泡水
+今天休息</textarea>
+    <p class="hint">最少 2 項、最多 20 項。修改後按「更新轉盤」套用。</p>
+    <div class="row">
+      <button class="btn-primary" id="spinBtn">🎡 開始旋轉</button>
+      <button class="btn-ghost" id="updateBtn">更新轉盤</button>
+    </div>
+    <div class="history" id="history" style="display:none;">
+      <strong>歷史結果</strong>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+  const center = size/2;
+  const radius = size/2 - 8;
+
+  const palette = ['#e8603c','#e8b23d','#2f8f80','#5b4b8a','#c94f7c','#3d7ea6','#d98236','#7a9e3e'];
+
+  let items = [];
+  let rotation = 0; // radians
+  let spinning = false;
+
+  const itemsInput = document.getElementById('items');
+  const resultEl = document.getElementById('result');
+  const historyEl = document.getElementById('history');
+  const historyList = document.getElementById('historyList');
+  const spinBtn = document.getElementById('spinBtn');
+  const updateBtn = document.getElementById('updateBtn');
+  const bulbsWrap = document.getElementById('bulbs');
+
+  function parseItems(){
+    const raw = itemsInput.value.split('\n').map(s=>s.trim()).filter(Boolean);
+    return raw.slice(0,20);
+  }
+
+  function layoutWheel(){
+    items = parseItems();
+    if(items.length < 2){
+      items = ['選項一','選項二'];
+    }
+    draw();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,size,size);
+    const n = items.length;
+    const arc = (Math.PI*2)/n;
+
+    ctx.save();
+    ctx.translate(center, center);
+    ctx.rotate(rotation);
+
+    for(let i=0;i<n;i++){
+      const start = i*arc;
+      const end = start+arc;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,radius,start,end);
+      ctx.closePath();
+      ctx.fillStyle = palette[i % palette.length];
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#1c1b29';
+      ctx.stroke();
+
+      // label
+      ctx.save();
+      ctx.rotate(start + arc/2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fbf7ee';
+      ctx.font = '600 ' + Math.max(13, 22 - n) + 'px "Noto Sans TC", sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 3;
+      const label = items[i].length > 14 ? items[i].slice(0,13)+'…' : items[i];
+      ctx.fillText(label, radius - 18, 6);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function placeBulbs(){
+    bulbsWrap.innerHTML = '';
+    const count = 24;
+    for(let i=0;i<count;i++){
+      const angle = (i/count)*Math.PI*2;
+      const b = document.createElement('div');
+      b.className = 'bulb';
+      const r = 50; // percent radius
+      const x = 50 + r*Math.cos(angle);
+      const y = 50 + r*Math.sin(angle);
+      b.style.left = x+'%';
+      b.style.top = y+'%';
+      b.style.animationDelay = (i*0.07)+'s';
+      bulbsWrap.appendChild(b);
+    }
+  }
+
+  function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+
+  function spin(){
+    if(spinning) return;
+    layoutWheelIfEmpty();
+    const n = items.length;
+    if(n < 2) return;
+
+    spinning = true;
+    spinBtn.disabled = true;
+    resultEl.classList.remove('show');
+
+    const arc = (Math.PI*2)/n;
+    // pick winner index
+    const winnerIndex = Math.floor(Math.random()*n);
+    // pointer is at top (angle = -90deg = -PI/2 from canvas 0 rad which starts at angle 0 = 3 o'clock)
+    // we want the winner segment's center to land at -PI/2 after rotation
+    const targetSegmentCenter = winnerIndex*arc + arc/2;
+    const extraSpins = 6 + Math.random()*2; // full turns
+    // final rotation such that: (targetSegmentCenter + rotation) mod 2PI == -PI/2 (i.e. pointing up)
+    const desiredFinal = (-Math.PI/2) - targetSegmentCenter;
+    const startRotation = rotation;
+    // normalize desiredFinal to be ahead of current rotation with extra spins
+    let finalRotation = startRotation + extraSpins*Math.PI*2 + (mod(desiredFinal - mod(startRotation,Math.PI*2), Math.PI*2));
+
+    const duration = 4200;
+    const startTime = performance.now();
+
+    function frame(now){
+      const t = Math.min(1, (now-startTime)/duration);
+      const eased = easeOutCubic(t);
+      rotation = startRotation + (finalRotation-startRotation)*eased;
+      draw();
+      if(t < 1){
+        requestAnimationFrame(frame);
+      }else{
+        spinning = false;
+        spinBtn.disabled = false;
+        announce(items[winnerIndex]);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function mod(a,b){ return ((a%b)+b)%b; }
+
+  function layoutWheelIfEmpty(){
+    if(items.length === 0) layoutWheel();
+  }
+
+  function announce(winner){
+    resultEl.textContent = '🎉 結果：' + winner;
+    resultEl.classList.add('show');
+    historyEl.style.display = 'block';
+    const li = document.createElement('li');
+    li.textContent = winner;
+    historyList.prepend(li);
+  }
+
+  spinBtn.addEventListener('click', spin);
+  canvas.addEventListener('click', spin);
+  canvas.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); spin(); }
+  });
+  updateBtn.addEventListener('click', layoutWheel);
+
+  placeBulbs();
+  layoutWheel();
+})();
+</script>
+</body>
+</html>
