@@ -289,8 +289,13 @@
 說話會帶來力量
 要怎麼樣讓故事跑起來
 一個人去做會很累 我會陪在你身邊 看著你
+如果我沒辦法靠成功來證明自己 我就要用徹底崩潰來證明自己
+單打獨鬥是很累人的 如果有人能幫你確認好壞 就不會那麼累了
+「愛」是一種概念 不是情緒
+畢竟 人也不可能在短短一瞬間就愛上别人 對吧
+♂️：對了 我可以傳訊息給妳嗎？ ♀️：可以啊 ♂️：隨時都能傳？♀️：當然
 恭喜妳 得到一次獎勵 跟我許願吧</textarea>
-    <p class="hint">最少 2 項、最多 20 項。修改後按「更新轉盤」套用。</p>
+    <p class="hint">最少 2 項、最多 50 項。修改後按「更新轉盤」套用。</p>
     <div class="row">
       <button class="btn-primary" id="spinBtn">🎡 開始旋轉</button>
       <button class="btn-ghost" id="updateBtn">更新轉盤</button>
@@ -326,7 +331,7 @@
 
   function parseItems(){
     const raw = itemsInput.value.split('\n').map(s=>s.trim()).filter(Boolean);
-    return raw.slice(0,20);
+    return raw.slice(0,50);
   }
 
   function layoutWheel(){
