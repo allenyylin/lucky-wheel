@@ -15,7 +15,8 @@
     --line:#1c1b29;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;height:100%;}
+  /* ---- 刪除 html,body{margin:0;height:100%;} 中的 height:100% ---- */
+  html,body{margin:0}
   body{
     background:
       radial-gradient(circle at 15% 10%, rgba(232,178,61,0.18), transparent 40%),
@@ -307,7 +308,9 @@
 就像一個男人，原本沒啥可取之處 可一旦有個女人肯定他，他似乎就變得真像那麼回事了
 ♂️：為什麼冬天會讓人覺得安心呢？♀️：因為人們會去尋找溫暖
 我一路跑過來 想給你個擁抱 有什麼好怕的
-恭喜妳 得到一次獎勵 跟我許願吧</textarea>
+恭喜妳 得到一次獎勵 跟我許願吧
+/* ---- p class="hint" ...最多 81 項目 ---- */
+    </textarea>
     <p class="hint">最少 2 項、最多 81 項。修改後按「更新轉盤」套用。</p>
     <div class="row">
       <button class="btn-primary" id="spinBtn">🎡 開始旋轉</button>
@@ -342,6 +345,7 @@
   const updateBtn = document.getElementById('updateBtn');
   const bulbsWrap = document.getElementById('bulbs');
 
+  /* ---- raw input total 81 rows ---- */
   function parseItems(){
     const raw = itemsInput.value.split('\n').map(s=>s.trim()).filter(Boolean);
     return raw.slice(0,81);
