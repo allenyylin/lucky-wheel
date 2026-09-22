@@ -581,6 +581,23 @@
       musicToggle.setAttribute('title','播放背景音樂');
     }
   });
+  /* ---- 分頁切到背景、離開頁面時，自動停止音樂 ---- */
+  function stopMusic(){
+    if(musicPlaying){
+      bgm.pause();
+      musicPlaying = false;
+      musicToggle.textContent = '🔇';
+      musicToggle.classList.remove('playing');
+      musicToggle.setAttribute('aria-label','播放背景音樂');
+      musicToggle.setAttribute('title','播放背景音樂');
+    }
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){ stopMusic(); }
+  });
+
+  window.addEventListener('pagehide', stopMusic);
 })();
 </script>
 </body>
