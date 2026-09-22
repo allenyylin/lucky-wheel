@@ -245,9 +245,41 @@
   @media (prefers-reduced-motion: reduce){
     .bulb{ animation:none; }
   }
+
+  /* ---- music toggle button ---- */
+  .music-toggle{
+    position:fixed;
+    top:16px;
+    right:16px;
+    z-index:50;
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    background:rgba(28,27,41,0.75);
+    border:1px solid rgba(251,247,238,0.25);
+    color:var(--paper);
+    font-size:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+    backdrop-filter: blur(6px);
+    box-shadow:0 4px 12px rgba(0,0,0,0.35);
+  }
+  .music-toggle:hover{ border-color:var(--gold); }
+  .music-toggle.playing{
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(232,178,61,0.35); }
+    50%{ box-shadow:0 0 0 8px rgba(232,178,61,0); }
+  }
 </style>
 </head>
 <body>
+
+<button class="music-toggle" id="musicToggle" aria-label="播放背景音樂" title="播放背景音樂">🔇</button>
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
 
 <div class="stage">
   <div>
@@ -522,6 +554,33 @@
 
   placeBulbs();
   layoutWheel();
+
+  /* ---- 背景音樂：手機瀏覽器規定必須由使用者主動點擊才能開始播放 ---- */
+  const bgm = document.getElementById('bgm');
+  const musicToggle = document.getElementById('musicToggle');
+  let musicPlaying = false;
+
+  musicToggle.addEventListener('click', function(){
+    if(!musicPlaying){
+      bgm.volume = 0.5; // 預設音量 50%，避免一開始太大聲嚇到人
+      bgm.play().then(function(){
+        musicPlaying = true;
+        musicToggle.textContent = '🔊';
+        musicToggle.classList.add('playing');
+        musicToggle.setAttribute('aria-label','靜音背景音樂');
+        musicToggle.setAttribute('title','靜音背景音樂');
+      }).catch(function(err){
+        console.error('音樂播放失敗：', err);
+      });
+    }else{
+      bgm.pause();
+      musicPlaying = false;
+      musicToggle.textContent = '🔇';
+      musicToggle.classList.remove('playing');
+      musicToggle.setAttribute('aria-label','播放背景音樂');
+      musicToggle.setAttribute('title','播放背景音樂');
+    }
+  });
 })();
 </script>
 </body>
